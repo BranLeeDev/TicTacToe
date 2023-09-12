@@ -1,9 +1,29 @@
+import { useState } from "react";
+import Square from "./components/Square";
+
 function App(): JSX.Element {
+  const [arrayIcons, setArrayIcons] = useState<(string | null)[]>(
+    Array(9).fill(null)
+  );
+
   return (
     <>
-      <button className="bg-sky-700 px-4 py-2 text-white hover:bg-sky-800 sm:px-8 sm:py-3">
-        press on me
-      </button>
+      <div className="flex flex-col gap-8">
+        <header>
+          <h1 className="text-center text-4xl text-zinc-50">Tic Tac Toe</h1>
+        </header>
+        <main className="flex flex-col items-center gap-8">
+          <section className="grid grid-cols-3 grid-rows-3 gap-4">
+            {arrayIcons.map((_, index) => (
+              <Square key={index} />
+            ))}
+          </section>
+          <section className="flex flex-row gap-4">
+            <div className="h-16 w-16 rounded bg-blue-700"></div>
+            <div className="h-16 w-16 rounded bg-blue-700"></div>
+          </section>
+        </main>
+      </div>
     </>
   );
 }
