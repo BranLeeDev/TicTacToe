@@ -1,9 +1,20 @@
 import React from "react";
 
-const Square: React.FC = (): JSX.Element => {
+interface Props {
+  handleUserTurn: () => void;
+}
+
+const Square: React.FC<Props> = ({ handleUserTurn }): JSX.Element => {
+  const handleClick = (): void => {
+    handleUserTurn();
+  };
+
   return (
     <>
-      <div className="h-24 w-24 cursor-pointer border"></div>
+      <div
+        className="am:w-24 am:h-24 h-20 w-20 cursor-pointer border"
+        onClick={handleClick}
+      ></div>
     </>
   );
 };
