@@ -1,104 +1,62 @@
 import { useState } from "react";
-import Square from "./components/Square";
-import confetti from "canvas-confetti";
 
-interface Turns {
-  x: string;
-  o: string;
-}
+// Components
+import Square from "./components/Square";
+import ModalWinner from "./components/ModalWinner";
+
+// Types
+import { type Turns, type ArrayIcons } from "./types";
+
+// Utils
+import checkWinner from "./utils/checkWinner";
+import startOrResumeGame from "./utils/startOrResumeGame";
+import startOrResumeTurn from "./utils/startOrResumeTurn";
+import execConfetti from "./utils/execConfetti";
 
 function App(): JSX.Element {
+  // Represents the possible turns in a tic tac toe game
   const TURNS: Turns = {
     x: "❌",
     o: "⚪",
   };
 
-  const winningCombinations = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6],
-  ];
+  // Initial array for start game or to resume the game from where the user left off
+  const [arrayIcons, setArrayIcons] = useState<ArrayIcons[]>(startOrResumeGame);
 
-  const checkWinner = (arrayIcons: (string | null)[]) => {
-    for (const index of winningCombinations) {
-      const [a, b, c] = index;
-      if (
-        arrayIcons[a] &&
-        arrayIcons[a] === arrayIcons[b] &&
-        arrayIcons[a] === arrayIcons[c]
-      )
-        return arrayIcons[a];
-    }
+  // User's turn in the game
+  const [turn, setTurn] = useState<boolean>(startOrResumeTurn);
 
-    if (!arrayIcons.includes(null)) {
-      return false;
-    }
-
-    return null;
-  };
-
-  const [arrayIcons, setArrayIcons] = useState<(string | null)[]>(
-    (): (string | null)[] => {
-      const currentArray: string | null =
-        window.localStorage.getItem("currentArray");
-      if (currentArray) {
-        const result = JSON.parse(currentArray);
-        return result;
-      }
-      return Array(9).fill(null);
-    }
-  );
-
-  const [turn, setTurn] = useState<boolean>(() => {
-    const whoIsTurn = JSON.parse(window.localStorage.getItem("turnUser"));
-    if (whoIsTurn === true) return false;
-    if (whoIsTurn === false) return true;
-    return true;
-  });
-
-  const [winner, setWinner] = useState<string | null | false>(null);
+  // Check if there is a winner
+  const [winner, setWinner] = useState<ArrayIcons | false>(null);
 
   const handleUserTurn = (index: number): void => {
-    const currentArray: (string | null)[] = [...arrayIcons];
+    const currentArray: ArrayIcons[] = [...arrayIcons];
     if (currentArray[index] === TURNS.x || currentArray[index] === TURNS.o)
       return;
     currentArray[index] = turn ? TURNS.x : TURNS.o;
 
+    // Saves the updated copy of currentArray to the browser's local storage.
     window.localStorage.setItem("currentArray", JSON.stringify(currentArray));
+    window.localStorage.setItem("turnUser", JSON.stringify(turn));
+
     setArrayIcons(currentArray);
-    const whoIsWinner = checkWinner(currentArray);
-    if (whoIsWinner) {
-      window.localStorage.clear();
-      const execConfetti = async (): Promise<void> => {
-        try {
-          await confetti();
-        } catch (error) {
-          console.error(error);
-        }
-      };
-      execConfetti()
-        .then(() => {
-          console.log("Confetti completed");
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-    }
+
+    // checks if there's a winner
+    const whoIsWinner: ArrayIcons | false = checkWinner(currentArray);
+
     setWinner(whoIsWinner);
 
-    setTurn(!turn);
+    if (whoIsWinner) {
+      execConfetti();
+      return;
+    }
 
-    window.localStorage.setItem("turnUser", JSON.stringify(turn));
+    setTurn(!turn);
   };
 
   const handleCloseModal = (): void => {
     setWinner(null);
-    setTurn(!turn);
+    setTurn(true);
     setArrayIcons(Array(9).fill(null));
     window.localStorage.clear();
   };
@@ -120,24 +78,7 @@ function App(): JSX.Element {
             ))}
           </section>
           {winner !== null && (
-            <div className="absolute left-0 top-0 flex h-full min-h-[30rem] w-full min-w-[20rem] items-center justify-center">
-              <section className="flex h-[19rem] w-[18rem] flex-col items-center justify-center rounded-xl border-2 bg-zinc-900 am:h-[22rem] am:w-[20.5rem]">
-                <div className="flex h-2/3 w-2/3 flex-col items-center justify-between gap-4">
-                  <h2 className="text-2xl font-normal text-zinc-50 am:text-3xl">
-                    {winner === false ? "Tie" : "Won"}
-                  </h2>
-                  <p className="text-4xl text-zinc-50 am:text-5xl">
-                    {winner === false ? "᛫" : winner}
-                  </p>
-                  <button
-                    className="bg-zinc-90 rounded-xl border-2 border-zinc-50 px-8 py-4 text-xl text-zinc-50 hover:border-zinc-950 hover:bg-zinc-50 hover:text-zinc-950 am:text-2xl"
-                    onClick={handleCloseModal}
-                  >
-                    Start Over
-                  </button>
-                </div>
-              </section>
-            </div>
+            <ModalWinner handleCloseModal={handleCloseModal} winner={winner} />
           )}
           <section className="flex flex-row gap-4">
             <div

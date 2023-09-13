@@ -18,7 +18,7 @@ const Square: React.FC<Props> = ({
   return (
     <>
       <div
-        className="am:w-24 am:h-24 am:text-4xl flex h-20 w-20 cursor-pointer items-center justify-center border text-3xl"
+        className="flex h-20 w-20 cursor-pointer items-center justify-center border text-3xl am:h-24 am:w-24 am:text-4xl"
         onClick={handleClick}
       >
         {children}
