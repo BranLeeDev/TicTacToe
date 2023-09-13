@@ -13,8 +13,6 @@ function App(): JSX.Element {
     o: "⚪",
   };
 
-  const initialArrayIcons = Array(9).fill(null);
-
   const winningCombinations = [
     [0, 1, 2],
     [3, 4, 5],
@@ -44,10 +42,24 @@ function App(): JSX.Element {
     return null;
   };
 
-  const [arrayIcons, setArrayIcons] =
-    useState<(string | null)[]>(initialArrayIcons);
+  const [arrayIcons, setArrayIcons] = useState<(string | null)[]>(
+    (): (string | null)[] => {
+      const currentArray: string | null =
+        window.localStorage.getItem("currentArray");
+      if (currentArray) {
+        const result = JSON.parse(currentArray);
+        return result;
+      }
+      return Array(9).fill(null);
+    }
+  );
 
-  const [turn, setTurn] = useState<boolean>(true);
+  const [turn, setTurn] = useState<boolean>(() => {
+    const whoIsTurn = JSON.parse(window.localStorage.getItem("turnUser"));
+    if (whoIsTurn === true) return false;
+    if (whoIsTurn === false) return true;
+    return true;
+  });
 
   const [winner, setWinner] = useState<string | null | false>(null);
 
@@ -56,9 +68,12 @@ function App(): JSX.Element {
     if (currentArray[index] === TURNS.x || currentArray[index] === TURNS.o)
       return;
     currentArray[index] = turn ? TURNS.x : TURNS.o;
+
+    window.localStorage.setItem("currentArray", JSON.stringify(currentArray));
     setArrayIcons(currentArray);
     const whoIsWinner = checkWinner(currentArray);
     if (whoIsWinner) {
+      window.localStorage.clear();
       const execConfetti = async (): Promise<void> => {
         try {
           await confetti();
@@ -75,12 +90,17 @@ function App(): JSX.Element {
         });
     }
     setWinner(whoIsWinner);
+
     setTurn(!turn);
+
+    window.localStorage.setItem("turnUser", JSON.stringify(turn));
   };
 
   const handleCloseModal = (): void => {
     setWinner(null);
-    setArrayIcons(initialArrayIcons);
+    setTurn(!turn);
+    setArrayIcons(Array(9).fill(null));
+    window.localStorage.clear();
   };
 
   return (
@@ -110,7 +130,7 @@ function App(): JSX.Element {
                     {winner === false ? "᛫" : winner}
                   </p>
                   <button
-                    className="rounded-xl border-2 bg-zinc-950 px-8 py-4 text-xl text-zinc-50 am:text-2xl"
+                    className="bg-zinc-90 rounded-xl border-2 border-zinc-50 px-8 py-4 text-xl text-zinc-50 hover:border-zinc-950 hover:bg-zinc-50 hover:text-zinc-950 am:text-2xl"
                     onClick={handleCloseModal}
                   >
                     Start Over
