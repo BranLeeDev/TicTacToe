@@ -1,4 +1,4 @@
-# NavBar
+# TicTacToe
 
 Este proyecto el juego clásico del "Tic tac toe" en una pagina web. Las tecnologías utilizadas en su creación son Vite, TypesScript, React, JSX y Tailwindcss.
 
